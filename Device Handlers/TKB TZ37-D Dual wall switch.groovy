@@ -1,5 +1,5 @@
 /**
- *  TKB TZ35-D Dual wall dimmer
+ *  TKB TZ37-D Dual wall switch
  *
  *  Copyright 2019 Grzegorz Zalewski
  *
@@ -13,20 +13,19 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *
- *	Note: device id's and models for these TKB home devices are a mess: re-used id's and/or no real certification. Just use one of the switch or dimmer versions
- *  and change to the proper DTH needed after including.
+ *	Note: device id's and models for these TKB home devices are a mess: re-used id's and/or no real certification. Just use one of the switch or dimmer versions 
+ *  and change to the proper DTH needed after including. 
  */
 
 metadata {
-    definition (name: "TKB TZ35-D Dual wall dimmer", namespace: "Zinsoft", Author: "Grzegorz Zalewski") {
+    definition (name: "TKB TZ37-D Dual wall switch", namespace: "Zinsoft", author: "Grzegorz Zalewski") {
         capability "Switch"
-        capability "Switch Level"
         capability "Polling"
         capability "Refresh"
         capability "Configuration"
 
-        // zw:L type:1101 mfr:0118 prod:0808 model:0808 ver:1.03 zwv:3.40 lib:06 cc:26,85,70,27,86,72
-        fingerprint mfr:"0118", prod:"0808", model:"0808", deviceJoinName: "TKB TZ35-D Dual wall dimmer"
+        //zw:L type:1001 mfr:0118 prod:0102 model:1020 ver:1.03 zwv:2.97 lib:06 cc:25,85,27,70,73,86,72
+        fingerprint mfr:"0118", prod:"0102", model:"1020", deviceJoinName: "TKB TZ37-D Dual wall switch"
 
     }
 
@@ -38,7 +37,7 @@ metadata {
     preferences {
 
         input name: "includeGroup1", type: "text",  title: "Include devices in group 1 - tap right button once (Enter Device Network Id's comma separated)"
-        input name: "includeGroup2", type: "text",  title: "Include devices in group 2 - tap left button twice (Enter Device Network Id's comma separated)"
+        input name: "includeGroup2", type: "text",  title: "Include devices in group 2 - left right button twice (Enter Device Network Id's comma separated)"
         input name: "includeGroup3", type: "text",  title: "Include devices in group 3 - tap right button twice (Enter Device Network Id's comma separated)"
         input name: "includeGroup4", type: "text",  title: "Include devices in group 4 - devices follow load (Enter Device Network Id's comma separated)"
         input name : "nightLight", type: "enum", options: ["0" : "LED is ON when the load attached is OFF", "1" : "LED is ON when the load attached is ON"], title: "Night light", description: "The LED behaviour based on the load attached. (default value is ON)"
@@ -50,16 +49,10 @@ metadata {
 
     tiles(scale: 2) {
 
-        // Multi Tile:
         multiAttributeTile(name:"switch", type: "lighting", width: 6, height: 4, canChangeIcon: true){
             tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
-                attributeState "on", label:'${name}', action:"switch.off", icon:"st.switches.switch.on", backgroundColor:"#00a0dc", nextState:"turningOff"
-                attributeState "off", label:'${name}', action:"switch.on", icon:"st.switches.switch.off", backgroundColor:"#ffffff", nextState:"turningOn"
-                attributeState "turningOn", label:'${name}', action:"switch.off", icon:"st.switches.switch.on", backgroundColor:"#00a0dc", nextState:"turningOff"
-                attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.switches.switch.off", backgroundColor:"#ffffff", nextState:"turningOn"
-            }
-            tileAttribute ("device.level", key: "SLIDER_CONTROL") {
-                attributeState "level", action:"switch level.setLevel"
+                attributeState "on", label:'${name}', action:"switch.off", icon:"st.switches.switch.on", backgroundColor:"#00a0dc", nextState:"off"
+                attributeState "off", label:'${name}', action:"switch.on", icon:"st.switches.switch.off", backgroundColor:"#ffffff", nextState:"on"
             }
         }
         standardTile("refresh", "device.switch", width: 3, height: 1, inactiveLabel: false, decoration: "flat") {
@@ -78,28 +71,14 @@ def on() {
     delayBetween([
             zwave.basicV1.basicSet(value: 0xFF).format(),
             zwave.switchMultilevelV1.switchMultilevelGet().format(),
-    ], 4000)
+    ], 2000)
 }
 
 def off() {
     delayBetween([
             zwave.basicV1.basicSet(value: 0x00).format(),
             zwave.switchMultilevelV1.switchMultilevelGet().format(),
-    ], 4000)
-}
-
-
-def setLevel(Integer value) {
-    // log.debug "setLevel >> value: $value"
-    //def valueaux = value as Integer
-    def level = Math.max(Math.min(value, 99), 0)
-    if (level > 0) {
-        sendEvent(name: "switch", value: "on")
-    } else {
-        sendEvent(name: "switch", value: "off")
-    }
-    sendEvent(name: "level", value: level, unit: "%")
-    delayBetween ([zwave.basicV1.basicSet(value: level).format(), zwave.switchMultilevelV1.switchMultilevelGet().format()], 5000)
+    ], 2000)
 }
 
 
@@ -108,28 +87,28 @@ def ping() {
 }
 
 def refresh() {
-    // log.debug "Refresh"
+    //log.debug "Refresh"
     poll()
 }
 
 def poll() {
-    zwave.switchMultilevelV1.switchMultilevelGet().format() //dimmer
-    //zwave.switchBinaryV1.switchBinaryGet().format() //switch
+    //zwave.switchMultilevelV1.switchMultilevelGet().format() //dimmer
+    zwave.switchBinaryV1.switchBinaryGet().format() //switch
 }
 
 def updated() {
     if (!state.updatedLastRanAt || now() >= state.updatedLastRanAt + 2000) {
-        // log.debug "Updated"
+        //log.debug "Updated"
         state.updatedLastRanAt = now()
         response(configure())
     }
 }
 
 def configure() {
-    // log.debug "Sending Configuration to device"
+
+    //log.debug "Sending Configuration to device"
 
     def cmds = []
-
     if (nightLight) { cmds << zwave.configurationV1.configurationSet(parameterNumber: 1, size: 1, scaledConfigurationValue: nightLight.toInteger()).format() }
     if (ignoreStartLevelBit) { cmds << zwave.configurationV1.configurationSet(parameterNumber: 2, size: 1, scaledConfigurationValue: ignoreStartLevelBit.toInteger()).format() }
     if (invertSwitch) { cmds << zwave.configurationV1.configurationSet(parameterNumber: 3, size: 1, scaledConfigurationValue: invertSwitch.toInteger()).format() }
