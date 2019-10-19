@@ -25,8 +25,8 @@ metadata {
         capability "Refresh"
         capability "Configuration"
 
-        // zw:L type:1101 mfr:0118 prod:0808 model:0808 ver:1.03 zwv:3.40 lib:06 cc:26,85,70,27,86,72
-        fingerprint mfr:"0118", prod:"0808", model:"0808", deviceJoinName: "TKB TZ35-D Dual wall dimmer"
+        // zw:L type:1101 mfr:FFFF prod:0003 model:0004 ver:2.02 zwv:4.05 lib:03 cc:5E,86,72,5A,85,59,73,20,70,26,27,2B,2C,7A role:05 ff:8601 ui:8600
+        fingerprint mfr:"0118", prod:"0003", model:"0004", deviceJoinName: "TKB TZ35-D Dual wall dimmer"
 
     }
 

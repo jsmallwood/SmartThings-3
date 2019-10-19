@@ -24,8 +24,8 @@ metadata {
         capability "Polling"
         capability "Refresh"
         capability "Configuration"
-
-        fingerprint mfr:"0118", prod:"0808", model:"0808", deviceJoinName: "TKB TZ35-S Single wall dimmer"
+        //zw:L type:1101 mfr:0118 prod:0311 model:0201 ver:2.05 zwv:4.05 lib:03 cc:5E,86,72,5A,85,59,73,20,70,26,27,2B,2C,7A role:05 ff:8601 ui:8600
+        fingerprint mfr:"0118", prod:"0311", model:"0201", deviceJoinName: "TKB TZ35-S Single wall dimmer"
 
     }
 
