@@ -155,8 +155,9 @@ def on() {
 }
 
 def setLevel(value) {
+
     log.debug "set level: $value"
-    sendTuyaCommand("02", DP_TYPE_VALUE, zigbee.convertToHexString(value, 2))
+    sendTuyaCommand("02", DP_TYPE_VALUE, zigbee.convertToHexString(Math.ceil(value), 2))
 }
 
 def refresh() {
