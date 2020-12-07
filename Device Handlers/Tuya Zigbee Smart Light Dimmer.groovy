@@ -120,7 +120,14 @@ private getDP_TYPE_BOOL() { "01" }
 private getDP_TYPE_VALUE() { "02" }
 private getDP_TYPE_ENUM() { "04" }
 
+def devlog(dp, dp_type, fncmd){
+    log.debug "Cluster $CLUSTER_TUYA"
+    log.debug "Command $SETDATA"
+    log.debug "Data ${PACKET_ID + dp +dp_type + zigbee.convertToHexString(fncmd.length()/2, 4) + fncmd }"
+}
+
 private sendTuyaCommand(dp, dp_type, fncmd) {
+    devlog(dp, dp_type, fncmd)
     zigbee.command(CLUSTER_TUYA, SETDATA, PACKET_ID + dp + dp_type + zigbee.convertToHexString(fncmd.length()/2, 4) + fncmd )
 }
 private getPACKET_ID() {
