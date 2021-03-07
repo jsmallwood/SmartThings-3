@@ -80,7 +80,6 @@
 // off        0104 EF00 01 01 0000 00 3A82 01 00 0000 01 01 0001020200040000000A
 // off        0104 EF00 01 01 0000 00 3A82 01 00 0000 01 01 00010101000100
 
-
 metadata {
     definition (name: "Zinsoft Tuya ZigBee Dimmer", namespace: "zinsoft", author: "Zinsoft") {
         capability "Actuator"
@@ -139,15 +138,17 @@ private getPACKET_ID() {
 
 // Parse incoming device messages to generate events
 def parse(String description) {
-
     if (description?.endsWith("00010101000101")) {
         return sendEvent(name: "switch", value: "on")
     }
     if (description?.endsWith("00010101000100")) {
         return sendEvent(name: "switch", value: "off")
     }
-    log.debug "description is $description"
 
+    def dhex = description.substring(description.length()-3,description.length())
+    def lvl = zigbee.convertHexToInt(dhex)/10
+    log.debug "lelvel is $lvl"
+    return sendEvent(name: "level", value: lvl)
 }
 
 
@@ -162,7 +163,7 @@ def on() {
 
 def setLevel(value) {
     log.debug "set level: $value"
-    sendTuyaCommand("02", DP_TYPE_VALUE, zigbee.convertToHexString(Math.ceil(value), 2))
+    sendTuyaCommand("02", DP_TYPE_VALUE, zigbee.convertToHexString(Math.ceil(value)*10, 2))
 }
 
 def refresh() {
