@@ -13,15 +13,10 @@
  *  READ BEFORE USE
  *  This is totally alpha version work only off and on commands level switch works with wrong values
  *  TODO
- *  * level change command
- *  * PARSER to display correct values in ST
- *  * fingerprint
+ *  * level change command with correct parser
  *  * Configuration
  *
  * NOTES
- * from error
- * [raw:0104 EF00 01 01 0000 00 75F9 01 00 0000 02 01 E04B030200040000000A,
- *
  * Profile id:0104
  * OutClusters:0019 000A
  * InClusters 0000 0004 0005 EF00
@@ -77,6 +72,15 @@
  * */
 
 
+// on         0104 EF00 01 01 0000 00 3A82 01 00 0000 01 01 00010101000101
+// on         0104 EF00 01 01 0000 00 3A82 01 00 0000 01 01 00010101000101
+// lvl        0104 EF00 01 01 0000 00 3A82 01 00 0000 01 01 00010202000400000226
+// lvl        0104 EF00 01 01 0000 00 3A82 01 00 0000 01 01 00010202000400000172
+// off        0104 EF00 01 01 0000 00 3A82 01 00 0000 01 01 00010101000100
+// off        0104 EF00 01 01 0000 00 3A82 01 00 0000 01 01 0001020200040000000A
+// off        0104 EF00 01 01 0000 00 3A82 01 00 0000 01 01 00010101000100
+
+
 metadata {
     definition (name: "Zinsoft Tuya ZigBee Dimmer", namespace: "zinsoft", author: "Zinsoft") {
         capability "Actuator"
@@ -84,7 +88,6 @@ metadata {
         capability "Refresh"
         capability "Switch"
         capability "Switch Level"
-
 
         fingerprint profileId: "0104", inClusters: "0000, 0003, 0004, 0005, 0006, 0008"
         fingerprint profileId: "0104", inClusters: "0000, 0003, 0004, 0005, 0006, 0008, 0B04, FC0F", outClusters: "0019", manufacturer: "OSRAM", model: "LIGHTIFY A19 ON/OFF/DIM", deviceJoinName: "OSRAM LIGHTIFY LED Smart Connected Light"
@@ -127,7 +130,6 @@ def devlog(dp, dp_type, fncmd){
 }
 
 private sendTuyaCommand(dp, dp_type, fncmd) {
-    devlog(dp, dp_type, fncmd)
     zigbee.command(CLUSTER_TUYA, SETDATA, PACKET_ID + dp + dp_type + zigbee.convertToHexString(fncmd.length()/2, 4) + fncmd )
 }
 private getPACKET_ID() {
@@ -137,32 +139,28 @@ private getPACKET_ID() {
 
 // Parse incoming device messages to generate events
 def parse(String description) {
+
+    if (description?.endsWith("00010101000101")) {
+        return sendEvent(name: "switch", value: "on")
+    }
+    if (description?.endsWith("00010101000100")) {
+        return sendEvent(name: "switch", value: "off")
+    }
     log.debug "description is $description"
 
-    def event = zigbee.getEvent(description)
-    if (event) {
-        sendEvent(event)
-    }
-    else {
-        log.warn "DID NOT PARSE MESSAGE for description : $description"
-        log.debug zigbee.parseDescriptionAsMap(description)
-    }
 }
 
 
 def off() {
-    log.debug "device off"
     sendTuyaCommand("01", DP_TYPE_ENUM, zigbee.convertToHexString(0))
 
 }
 
 def on() {
-    log.debug "device on"
     sendTuyaCommand("01", DP_TYPE_ENUM, zigbee.convertToHexString(1))
 }
 
 def setLevel(value) {
-
     log.debug "set level: $value"
     sendTuyaCommand("02", DP_TYPE_VALUE, zigbee.convertToHexString(Math.ceil(value), 2))
 }
@@ -175,8 +173,6 @@ def refresh() {
 }
 
 def configure() {
-    log.debug "Configuring Reporting and Bindings."
-
     return zigbee.configureReporting(0x0006, 0x0000, 0x10, 0, 600, null) +
             zigbee.configureReporting(0x0008, 0x0000, 0x20, 1, 3600, 0x01) +
             zigbee.readAttribute(0x0006, 0x0000) +
